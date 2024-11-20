@@ -112,7 +112,7 @@ router.post("/deposit", authMiddleware, async (req, res) => {
         .status(403)
         .json({ message: "Account is locked or not found." });
 
-    const isMatch = await bcrypt.compare(pin, user.hashedPin);
+    const isMatch = await bcrypt.compare(pin, user.pin);
     if (!isMatch) return res.status(400).json({ message: "Invalid PIN" });
 
     user.balance += amount;
@@ -139,7 +139,7 @@ router.post("/withdraw", authMiddleware, async (req, res) => {
     if (user.isLocked)
       return res.status(403).json({ message: "Account is locked" });
 
-    const isMatch = await bcrypt.compare(pin, user.hashedPin);
+    const isMatch = await bcrypt.compare(pin, user.pin);
     if (!isMatch) return res.status(400).json({ message: "Invalid PIN" });
 
     if (user.balance < amount) {
@@ -176,7 +176,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     if (sender.isLocked)
       return res.status(403).json({ message: "Sender account is locked" });
 
-    const isMatch = await bcrypt.compare(pin, sender.hashedPin);
+    const isMatch = await bcrypt.compare(pin, sender.pin);
     if (!isMatch) return res.status(400).json({ message: "Invalid PIN" });
 
     if (sender.balance < amount) {
