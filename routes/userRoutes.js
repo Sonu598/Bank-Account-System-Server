@@ -119,10 +119,10 @@ router.post("/deposit", authMiddleware, async (req, res) => {
     const isMatch = await bcrypt.compare(pin, user.pin);
     if (!isMatch) return res.status(400).json({ message: "Invalid PIN" });
 
-    user.balance += amount;
+    user.balance += Number(amount);
     user.transactions.push({
       type: "Deposit",
-      amount,
+      amount: Number(amount),
       balanceAfterTransaction: user.balance,
     });
 
@@ -173,6 +173,11 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     const recipient = await User.findOne({
       accountNumber: recipientAccountNumber,
     });
+    if (recipientAccountNumber === currentUser.accountNumber) {
+      return res
+        .status(400)
+        .json({ message: "Cannot transfer to own Account" });
+    }
 
     if (!sender) return res.status(404).json({ message: "Sender not found" });
     if (!recipient)
