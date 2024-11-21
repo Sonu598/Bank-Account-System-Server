@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const authMiddleware = require("../middlewares/authMiddleware");
+const user = require("../models/user");
 
 const router = express.Router();
 
@@ -173,11 +174,11 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     const recipient = await User.findOne({
       accountNumber: recipientAccountNumber,
     });
-    if (recipientAccountNumber === currentUser.accountNumber) {
-      return res
-        .status(400)
-        .json({ message: "Cannot transfer to own Account" });
-    }
+    // if (recipientAccountNumber === user.accountNumber) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Cannot transfer to own Account" });
+    // }
 
     if (!sender) return res.status(404).json({ message: "Sender not found" });
     if (!recipient)
