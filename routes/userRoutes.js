@@ -247,4 +247,21 @@ router.get("/statement", authMiddleware, async (req, res) => {
   }
 });
 
+router.get("/details", async (req, res) => {
+  const token = req.header("Authorization")?.split(" ")[1];
+  if (!token)
+    return res
+      .status(401)
+      .json({ message: "Access denied. No token provided." });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log(decoded);
+    const user = User.findById(decoded.id);
+    res.send(user);
+  } catch (err) {
+    res.status(400).json({ message: "Invalid token." });
+  }
+});
+
 module.exports = router;
