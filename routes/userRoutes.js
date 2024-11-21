@@ -186,7 +186,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     if (sender.isLocked)
       return res.status(403).json({ message: "Sender account is locked" });
 
-    const receiverUser = await User.findOne({ username: receiver });
+    const receiverUser = await User.findOne({ receiver: username });
     if (!receiverUser) {
       return res.status(404).json({ message: "Recipient account not found" });
     }
