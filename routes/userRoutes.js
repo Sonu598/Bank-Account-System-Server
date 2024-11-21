@@ -75,9 +75,13 @@ router.post("/login", async (req, res) => {
       if (user.failedAttempts >= 3) {
         user.isLocked = true;
         user.lockTime = new Date();
+        return res.status(403).json({ message: "Account locked for 24 hours" });
       }
       await user.save();
-      return res.status(400).json({ message: "Invalid PIN" });
+      const remainingAttempts = 3 - user.failedAttempts;
+      return res.status(401).json({
+        message: `Invalid PIN. ${remainingAttempts} attempts remaining.`,
+      });
     }
 
     user.failedAttempts = 0;
@@ -176,6 +180,16 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     if (sender.isLocked)
       return res.status(403).json({ message: "Sender account is locked" });
 
+    const receiverUser = await User.findOne({ username: receiver });
+    if (!receiverUser) {
+      return res.status(404).json({ message: "Recipient account not found" });
+    }
+
+    if (receiverUser.isLocked) {
+      return res.status(403).json({
+        message: "Recipient account is locked. Cannot transfer money.",
+      });
+    }
     const isMatch = await bcrypt.compare(pin, sender.pin);
     if (!isMatch) return res.status(400).json({ message: "Invalid PIN" });
 
