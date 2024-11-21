@@ -3,7 +3,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const authMiddleware = require("../middlewares/authMiddleware");
-const user = require("../models/user");
 
 const router = express.Router();
 
@@ -174,11 +173,11 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     const recipient = await User.findOne({
       accountNumber: recipientAccountNumber,
     });
-    // if (recipientAccountNumber === user.accountNumber) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "Cannot transfer to own Account" });
-    // }
+    if (recipientAccountNumber === sender.accountNumber) {
+      return res
+        .status(400)
+        .json({ message: "Cannot transfer to own Account" });
+    }
 
     if (!sender) return res.status(404).json({ message: "Sender not found" });
     if (!recipient)
@@ -186,7 +185,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     if (sender.isLocked)
       return res.status(403).json({ message: "Sender account is locked" });
 
-    const receiverUser = await User.findOne({ receiver: username });
+    const receiverUser = await User.findOne({ username: recipient.username });
     if (!receiverUser) {
       return res.status(404).json({ message: "Recipient account not found" });
     }
