@@ -170,6 +170,8 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     const bankAccount = await User.findOne({
       accountNumber: process.env.BANK_ACC_NUMS,
     });
+    console.log(bankAccount);
+
     if (recipientAccountNumber === sender.accountNumber) {
       return res
         .status(400)
