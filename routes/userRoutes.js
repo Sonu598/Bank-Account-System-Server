@@ -6,6 +6,8 @@ const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
+const chargePerTransfer = 0.5;
+
 // generate account number
 const generateAccountNumber = () =>
   `BANK-${Math.floor(1000000 + Math.random() * 9000000)}`;
@@ -195,10 +197,12 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     }
 
     // Deduct from sender
-    sender.balance -= Number(amount);
+    const charges = amount * chargePerTransfer;
+    sender.balance -= Number(amount) + charges;
     sender.transactions.push({
       type: "Transfer",
       amount,
+      charges,
       balanceAfterTransaction: sender.balance,
       details: { recipient: recipient.accountNumber },
     });
@@ -212,9 +216,19 @@ router.post("/transfer", authMiddleware, async (req, res) => {
       details: { sender: sender.accountNumber },
     });
 
+    // Add charges to the bank's Account
+    const bankAccount = process.env.BANK_ACC_NUM;
+    bankAccount.balance += charges;
+    bankAccount.transactions.push({
+      type: "Charge",
+      amount: charges,
+      balanceAfterTransaction: bankAccount.balance,
+    });
+
     // Save both
     await sender.save();
     await recipient.save();
+    await bankAccount.save();
 
     res.json({ message: "Transfer successful", senderBalance: sender.balance });
   } catch (err) {
