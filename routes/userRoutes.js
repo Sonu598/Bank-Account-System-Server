@@ -78,20 +78,20 @@ router.post("/login", async (req, res) => {
       user.failedLoginAttempts = 0;
       user.lockedUntil = null;
       await user.save();
-    }
-    const token = jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN,
-      }
-    );
+      const token = jwt.sign(
+        { id: user._id, username: user.username },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: process.env.JWT_EXPIRES_IN,
+        }
+      );
 
-    res.json({
-      message: "Login successful",
-      token,
-      user,
-    });
+      res.json({
+        message: "Login successful",
+        token,
+        user,
+      });
+    }
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
