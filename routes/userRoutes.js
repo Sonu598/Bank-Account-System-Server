@@ -167,6 +167,9 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     const recipient = await User.findOne({
       accountNumber: recipientAccountNumber,
     });
+    const bankAccount = await User.findOne({
+      accountNumber: process.env.BANK_ACC_NUMS,
+    });
     if (recipientAccountNumber === sender.accountNumber) {
       return res
         .status(400)
@@ -217,10 +220,9 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     });
 
     // Add charges to the bank's Account
-    const bankAccount = process.env.BANK_ACC_NUM;
     bankAccount.balance += charges;
     bankAccount.transactions.push({
-      type: "Charge",
+      type: "Charges",
       amount: charges,
       balanceAfterTransaction: bankAccount.balance,
     });
