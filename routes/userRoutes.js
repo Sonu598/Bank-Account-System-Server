@@ -54,11 +54,10 @@ router.post("/login", async (req, res) => {
     const { username, pin } = req.body;
     const user = await User.findOne({ username });
 
-    if (!user)
-      return res.status(400).json({ message: "Invalid username or PIN" });
+    if (!user) return res.status(400).json({ message: "Invalid username" });
 
-    if (user.isLocked) {
-      const timeDiff = (new Date() - user.lockTime) / (1000 * 60 * 60); // Hours
+    if (user.isLocked || user.failedAttempts >= 3) {
+      const timeDiff = (new Date() - user.lockTime) / (1000 * 60 * 60);
       if (timeDiff < 24)
         return res
           .status(403)
@@ -72,7 +71,7 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(pin, user.pin);
     if (!isMatch) {
       user.failedAttempts += 1;
-      if (user.failedAttempts >= 3) {
+      if ((user.failedAttempts = 3)) {
         user.isLocked = true;
         user.lockTime = new Date();
         return res.status(403).json({ message: "Account locked for 24 hours" });
