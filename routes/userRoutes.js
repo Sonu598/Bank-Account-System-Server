@@ -61,19 +61,7 @@ router.post("/login", async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(pin, user.pin);
-    if (!isMatch) {
-      user.failedAttempts += 1;
-      if (user.failedAttempts >= 3) {
-        user.isLocked = true;
-        user.lockTime = new Date() + 24 * 60 * 60 * 1000;
-        return res.status(403).json({ message: "Account locked for 24 hours" });
-      }
-      await user.save();
-      const remainingAttempts = 3 - user.failedAttempts;
-      return res.status(401).json({
-        message: `Invalid PIN. ${remainingAttempts} attempts remaining.`,
-      });
-    } else {
+    if (isMatch) {
       user.failedAttempts = 0;
       user.lockTime = null;
       await user.save();
@@ -89,6 +77,18 @@ router.post("/login", async (req, res) => {
         message: "Login successful",
         token,
         user,
+      });
+    } else {
+      user.failedAttempts += 1;
+      if (user.failedAttempts >= 3) {
+        user.isLocked = true;
+        user.lockTime = new Date() + 24 * 60 * 60 * 1000;
+        return res.status(403).json({ message: "Account locked for 24 hours" });
+      }
+      await user.save();
+      const remainingAttempts = 3 - user.failedAttempts;
+      return res.status(401).json({
+        message: `Invalid PIN. ${remainingAttempts} attempts remaining.`,
       });
     }
   } catch (err) {
