@@ -63,7 +63,7 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(pin, user.pin);
     if (!isMatch) {
       user.failedAttempts += 1;
-      if (user.failedAttempts >= 3) {
+      if (user.failedAttempts > 3) {
         // user.isLocked = true;
         user.lockTime = new Date() + 24 * 60 * 60 * 1000;
         return res.status(403).json({ message: "Account locked for 24 hours" });
