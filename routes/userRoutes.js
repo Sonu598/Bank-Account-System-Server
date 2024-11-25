@@ -58,34 +58,36 @@ router.post("/login", async (req, res) => {
 
     if (user.isLocked || user.failedAttempts >= 3) {
       const timeDiff = (new Date() - user.lockTime) / (1000 * 60 * 60);
-      if (timeDiff < 24)
+      if (timeDiff < 24) {
         return res
           .status(403)
           .json({ message: "Account is locked. Try again later." });
+      } else {
+        user.isLocked = false; // Unlock account after 24 hours
+        user.failedAttempts = 0;
+        await user.save();
+      }
+    } else {
+      const isMatch = await bcrypt.compare(pin, user.pin);
+      if (!isMatch) {
+        user.failedAttempts += 1;
+        if ((user.failedAttempts = 3)) {
+          user.isLocked = true;
+          user.lockTime = new Date();
+          return res
+            .status(403)
+            .json({ message: "Account locked for 24 hours" });
+        }
+        await user.save();
+        const remainingAttempts = 3 - user.failedAttempts;
+        return res.status(401).json({
+          message: `Invalid PIN. ${remainingAttempts} attempts remaining.`,
+        });
+      }
 
-      user.isLocked = false; // Unlock account after 24 hours
       user.failedAttempts = 0;
       await user.save();
     }
-
-    const isMatch = await bcrypt.compare(pin, user.pin);
-    if (!isMatch) {
-      user.failedAttempts += 1;
-      if ((user.failedAttempts = 3)) {
-        user.isLocked = true;
-        user.lockTime = new Date();
-        return res.status(403).json({ message: "Account locked for 24 hours" });
-      }
-      await user.save();
-      const remainingAttempts = 3 - user.failedAttempts;
-      return res.status(401).json({
-        message: `Invalid PIN. ${remainingAttempts} attempts remaining.`,
-      });
-    }
-
-    user.failedAttempts = 0;
-    await user.save();
-
     const token = jwt.sign(
       { id: user._id, username: user.username },
       process.env.JWT_SECRET,
