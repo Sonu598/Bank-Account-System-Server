@@ -203,7 +203,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     }
 
     // Deduct from sender
-    sender.balance -= amount;
+    sender.balance -= Number(amount);
     sender.transactions.push({
       type: "Transfer",
       amount,
@@ -212,7 +212,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
     });
 
     // Add to recipient
-    recipient.balance += amount;
+    recipient.balance += Number(amount);
     recipient.transactions.push({
       type: "Transfer",
       amount,
