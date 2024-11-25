@@ -6,7 +6,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-const chargePerTransfer = 0.5;
+const chargePerTransfer = 0.002;
 
 // generate account number
 const generateAccountNumber = () =>
@@ -203,7 +203,8 @@ router.post("/transfer", authMiddleware, async (req, res) => {
 
     // Deduct from sender
     const charges = amount * chargePerTransfer;
-    sender.balance -= Number(amount) + charges;
+    sender.balance -= Number(amount);
+    sender.balance -= Number(charges);
     sender.transactions.push({
       type: "Transfer",
       amount,
