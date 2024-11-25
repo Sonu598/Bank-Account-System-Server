@@ -82,7 +82,7 @@ router.post("/login", async (req, res) => {
       user.failedAttempts += 1;
       if (user.failedAttempts >= 3) {
         user.isLocked = true;
-        user.lockTime = new Date() + 24 * 60 * 60 * 1000;
+        user.lockTime = new Date.now() + 24 * 60 * 60 * 1000;
         await user.save();
         return res.status(403).json({ message: "Account locked for 24 hours" });
       }
