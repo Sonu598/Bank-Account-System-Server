@@ -57,7 +57,7 @@ router.post("/login", async (req, res) => {
     if (!user) return res.status(400).json({ message: "Invalid username" });
 
     if (user.lockTime > Date.now()) {
-      return res.status(403).json({ error: "Account is locked" });
+      return res.status(403).send("Account is locked");
     }
 
     const isMatch = await bcrypt.compare(pin, user.pin);
