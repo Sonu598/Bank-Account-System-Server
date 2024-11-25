@@ -68,15 +68,16 @@ router.post("/login", async (req, res) => {
         user.lockTime = new Date() + 24 * 60 * 60 * 1000;
         return res.status(403).json({ message: "Account locked for 24 hours" });
       } else {
-        user.failedLoginAttempts = 0;
-        user.lockedUntil = null;
         await user.save();
+        const remainingAttempts = 3 - user.failedAttempts;
+        return res.status(401).json({
+          message: `Invalid PIN. ${remainingAttempts} attempts remaining.`,
+        });
       }
+    } else {
+      user.failedLoginAttempts = 0;
+      user.lockedUntil = null;
       await user.save();
-      const remainingAttempts = 3 - user.failedAttempts;
-      return res.status(401).json({
-        message: `Invalid PIN. ${remainingAttempts} attempts remaining.`,
-      });
     }
     const token = jwt.sign(
       { id: user._id, username: user.username },
