@@ -56,37 +56,27 @@ router.post("/login", async (req, res) => {
 
     if (!user) return res.status(400).json({ message: "Invalid username" });
 
-    if (user.isLocked || user.failedAttempts >= 3) {
-      const timeDiff = (new Date() - user.lockTime) / (1000 * 60 * 60);
-      if (timeDiff < 24) {
-        return res
-          .status(403)
-          .json({ message: "Account is locked. Try again later." });
-      } else {
-        user.isLocked = false; // Unlock account after 24 hours
-        user.failedAttempts = 0;
-        await user.save();
-      }
-    } else {
-      const isMatch = await bcrypt.compare(pin, user.pin);
-      if (!isMatch) {
-        user.failedAttempts += 1;
-        if ((user.failedAttempts = 3)) {
-          user.isLocked = true;
-          user.lockTime = new Date();
-          return res
-            .status(403)
-            .json({ message: "Account locked for 24 hours" });
-        }
-        await user.save();
-        const remainingAttempts = 3 - user.failedAttempts;
-        return res.status(401).json({
-          message: `Invalid PIN. ${remainingAttempts} attempts remaining.`,
-        });
-      }
+    if (user.lockTime > Date.now()) {
+      return res.status(403).json({ error: "Account is locked" });
+    }
 
-      user.failedAttempts = 0;
+    const isMatch = await bcrypt.compare(pin, user.pin);
+    if (!isMatch) {
+      user.failedAttempts += 1;
+      if (user.failedAttempts >= 3) {
+        user.isLocked = true;
+        user.lockTime = new Date() + 24 * 60 * 60 * 1000;
+        return res.status(403).json({ message: "Account locked for 24 hours" });
+      } else {
+        user.failedLoginAttempts = 0;
+        user.lockedUntil = null;
+        await user.save();
+      }
       await user.save();
+      const remainingAttempts = 3 - user.failedAttempts;
+      return res.status(401).json({
+        message: `Invalid PIN. ${remainingAttempts} attempts remaining.`,
+      });
     }
     const token = jwt.sign(
       { id: user._id, username: user.username },
