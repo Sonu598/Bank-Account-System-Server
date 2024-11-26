@@ -1,0 +1,278 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Bank Account System API",
+    "version": "1.0.0",
+    "description": "An API for managing a bank account system with features like user registration, login, deposit, withdrawal, transfer, and transaction history."
+  },
+  "servers": [
+    {
+      "url": "https://bank-account-system-server.onrender.com/user",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/register": {
+      "post": {
+        "summary": "Register a new user",
+        "description": "Registers a new user by creating an account with a unique username and hashed PIN.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "pin": { "type": "string" },
+                  "initialDeposit": { "type": "number", "default": 0 }
+                },
+                "required": ["username", "pin"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accountNumber": { "type": "string" },
+                    "balance": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation or username conflict error"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Log in a user",
+        "description": "Authenticates a user and returns a JWT token on success.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "pin": { "type": "string" }
+                },
+                "required": ["username", "pin"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string" },
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "/Transaction"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials or account locked"
+          }
+        }
+      }
+    },
+    "/deposit": {
+      "post": {
+        "summary": "Deposit money into account",
+        "description": "Allows a user to deposit money into their account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "pin": { "type": "string" },
+                  "amount": { "type": "number" }
+                },
+                "required": ["username", "pin", "amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deposit successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "updatedBalance": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Invalid PIN or account locked"
+          }
+        }
+      }
+    },
+    "/withdraw": {
+      "post": {
+        "summary": "Withdraw money from account",
+        "description": "Allows a user to withdraw money from their account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "pin": { "type": "string" },
+                  "amount": { "type": "number" }
+                },
+                "required": ["username", "pin", "amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Withdrawal successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "updatedBalance": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Insufficient balance or validation error"
+          },
+          "401": {
+            "description": "Invalid PIN or account locked"
+          }
+        }
+      }
+    },
+    "/transfer": {
+      "post": {
+        "summary": "Transfer money to another user",
+        "description": "Transfers money from the user's account to another user's account.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "senderUsername": { "type": "string" },
+                  "recipientUsername": { "type": "string" },
+                  "pin": { "type": "string" },
+                  "amount": { "type": "number" }
+                },
+                "required": [
+                  "senderUsername",
+                  "recipientUsername",
+                  "pin",
+                  "amount"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfer successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "updatedBalance": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid recipient or insufficient balance"
+          },
+          "401": {
+            "description": "Invalid PIN or account locked"
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "get": {
+        "summary": "Get transaction history",
+        "description": "Fetches the transaction history for the logged-in user.",
+        "responses": {
+          "200": {
+            "description": "Transaction history retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Transaction"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized or session expired"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Deposit", "Withdraw", "Transfer"]
+          },
+          "amount": { "type": "number" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "balanceAfter": { "type": "number" },
+          "details": { "type": "string" }
+        }
+      }
+    }
+  }
+}
